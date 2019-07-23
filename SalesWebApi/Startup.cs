@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SalesWebApi.Data;
 
@@ -31,7 +32,12 @@ namespace SalesWebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc()
-                    .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver())
+                    .AddJsonOptions(options =>
+                        {
+                            options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                            options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                        }
+                    )
                     .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddDbContext<SalesContext>(options =>
@@ -40,9 +46,9 @@ namespace SalesWebApi
 
             services.AddScoped<SeedDatabase>();
         }
-
+        
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, 
+        public void Configure(IApplicationBuilder app,
                               IHostingEnvironment env,
                               SeedDatabase seedDatabase)
         {
@@ -55,6 +61,11 @@ namespace SalesWebApi
             };
 
             app.UseRequestLocalization(localizationOptions);
+
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            };
 
             if (env.IsDevelopment())
             {

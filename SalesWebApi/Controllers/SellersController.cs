@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SalesWebApi.Data;
 using SalesWebApi.Models;
@@ -9,11 +10,11 @@ namespace SalesWebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DepartmentsController : ControllerBase
+    public class SellersController : ControllerBase
     {
         private readonly SalesContext _context;
 
-        public DepartmentsController(SalesContext context)
+        public SellersController(SalesContext context)
         {
             _context = context;
         }
@@ -23,7 +24,7 @@ namespace SalesWebApi.Controllers
         {
             try
             {
-                return Ok(_context.Department.ToList());
+                return Ok(_context.Seller.ToList());
             }
             catch (System.Exception)
             {
@@ -36,27 +37,44 @@ namespace SalesWebApi.Controllers
         {
             try
             {
-                var department = _context.Department.FirstOrDefault(p => p.Id == id);
-                return Ok(department);
+                var seller = _context.Seller.FirstOrDefault(p => p.Id == id);
+                return Ok(seller);
             }
             catch (System.Exception)
             {
                 throw;
             }
-        }        
+        }
+
+        [HttpGet("{id}/{classToInclude}")]
+        public IActionResult FindByIdIncluding(int id, string classToInclude)
+        {
+            try
+            {
+                var seller = _context.Seller
+                                     .Include(classToInclude)
+                                     .FirstOrDefault(p => p.Id == id);
+
+                return Ok(seller);
+            }
+            catch (System.Exception)
+            {
+                throw;
+            }
+        }
 
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] string jsonValues)
         {
             try
             {
-                var department = new Department();
-                JsonConvert.PopulateObject(jsonValues, department);
+                var seller = new Seller();
+                JsonConvert.PopulateObject(jsonValues, seller);
 
-                if (!TryValidateModel(department))
+                if (!TryValidateModel(seller))
                     return BadRequest(ModelState);
 
-                _context.Department.Add(department);
+                _context.Seller.Add(seller);
                 await _context.SaveChangesAsync();
 
                 return Ok();
@@ -72,10 +90,10 @@ namespace SalesWebApi.Controllers
         {
             try
             {
-                var department = _context.Department.First(p => p.Id == id);
-                JsonConvert.PopulateObject(jsonValues, department);
+                var seller = _context.Seller.First(p => p.Id == id);
+                JsonConvert.PopulateObject(jsonValues, seller);
 
-                if (!TryValidateModel(department))
+                if (!TryValidateModel(seller))
                     return BadRequest(ModelState);
 
                 await _context.SaveChangesAsync();
@@ -93,8 +111,8 @@ namespace SalesWebApi.Controllers
         {
             try
             {
-                var department = await _context.Department.FindAsync(id);
-                _context.Department.Remove(department);
+                var seller = await _context.Seller.FindAsync(id);
+                _context.Seller.Remove(seller);
 
                 await _context.SaveChangesAsync();
             }
